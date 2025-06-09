@@ -10,6 +10,7 @@ import Toast from "react-native-toast-message";
 import { mostrarToast } from '../components/Toast';
 import { UsuarioDTO } from "../model/DTOs/UsuarioDto";
 import Input from "../components/Input";
+import { cadastrar } from "../service/auth/CadastroService";
 
 export default function Cadastro({ navigation }) {
     const [usuario, setUsuario] = useState(new UsuarioDTO('', '', '', '', ''));
@@ -29,7 +30,10 @@ export default function Cadastro({ navigation }) {
 
         const errosValidacao = novoUsuario.validarCampos();
         setErros(errosValidacao);
-        setIsValid(errosValidacao.length === 0);
+        setIsValid(Object.keys(errosValidacao).length === 0);
+        console.log("Erros:", errosValidacao);
+        console.log("isValid:", Object.keys(errosValidacao).length === 0);
+
     }, [usuario]);
 
     const handleChange = (campo, valor) => {
@@ -49,9 +53,9 @@ export default function Cadastro({ navigation }) {
                 usuario.confirmarSenha
             );
 
-            // await cadastrar(dto.nome, dto.email, dto.senha, dto.confirmarSenha);
-            // mostrarToast('success', 'Sucesso', 'Cadastro realizado com sucesso!');
-            // setTimeout(() => navigation.navigate("login"), 1500);
+            await cadastrar(dto.nome, dto.email, dto.dataNascimento, dto.senha, dto.confirmarSenha);
+            mostrarToast('success', 'Sucesso', 'Cadastro realizado com sucesso!');
+            setTimeout(() => navigation.navigate("login"), 1500);
 
         } catch (error) {
             mostrarToast('error', 'Erro no Cadastro', error.message || "Erro ao cadastrar");
