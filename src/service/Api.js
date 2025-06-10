@@ -1,18 +1,8 @@
 import axios from 'axios';
-import constants from 'expo-constants';
-
-const API_URL =
-  constants.expoConfig?.extra?.API_URL || 
-  constants.manifest?.extra?.API_URL ||   
-  'http://localhost:3000';         
-  
-  console.log(API_URL)
-
+      
 const api = axios.create({
-  baseURL: `${API_URL}/api`,
-
+  baseURL: `http://10.10.102.19:3000/api`,
 });
-
 
 export default api;
 

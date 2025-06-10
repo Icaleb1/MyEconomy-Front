@@ -18,7 +18,7 @@ export default function Input({ label, value, onChange, ...props }) {
 const styles = StyleSheet.create({
   inputGroup: {
     width: 350,
-    marginBottom: 16,
+    marginTop: 10,
   },
   label: {
     fontWeight: 'bold',
@@ -29,9 +29,9 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
     height: 50,
-    backgroundColor: "#f2DCF1",
+    backgroundColor: "#A3D7CE",
     borderWidth: 2,
-    borderColor: "#1B0273",
+    borderColor: "#52baa7",
     borderRadius: 5,
     paddingHorizontal: 10,
     color: "black",

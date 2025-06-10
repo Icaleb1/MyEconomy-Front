@@ -18,7 +18,6 @@ export default function Cadastro({ navigation }) {
     const [isLoading, setIsLoading] = useState(false);
     const [erros, setErros] = useState({});
 
-
     useEffect(() => {
         const novoUsuario = new UsuarioDTO(
             usuario.nome,
@@ -31,8 +30,6 @@ export default function Cadastro({ navigation }) {
         const errosValidacao = novoUsuario.validarCampos();
         setErros(errosValidacao);
         setIsValid(Object.keys(errosValidacao).length === 0);
-        console.log("Erros:", errosValidacao);
-        console.log("isValid:", Object.keys(errosValidacao).length === 0);
 
     }, [usuario]);
 
@@ -70,7 +67,7 @@ export default function Cadastro({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.tituloInicial}>Cadastro</Text>
+            <Text style={styles.tituloInicial}>Cadastre-se</Text>
 
             <View style={styles.formContainer}>
                 <View>
@@ -93,13 +90,14 @@ export default function Cadastro({ navigation }) {
                     <Input label="Confirmar Senha" value={usuario.confirmarSenha} onChange={value => handleChange("confirmarSenha", value)} secureTextEntry />
                     {erros.confirmarSenha && <Text style={styles.errorText}>{erros.confirmarSenha}</Text>}
                 </View>
+
                 <TouchableOpacity
                     style={[styles.buttonEntrar, !isValid && styles.buttonDisabilitado]}
                     onPress={handleCadastro}
                     disabled={!isValid || isLoading}
                 >
                     <Text style={styles.textButton}>
-                        {isLoading ? "..." : "Cadastrar"}
+                        {isLoading ? "Aguarde..." : "Cadastrar"}
                     </Text>
                 </TouchableOpacity>
 
@@ -115,53 +113,29 @@ export default function Cadastro({ navigation }) {
     );
 }
 
-
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#F2C4B3",
+        backgroundColor: "#718f85",
         alignItems: 'center',
-        paddingTop: 100,
+        paddingTop: 30,
     },
     tituloInicial: {
         color: "white",
         fontSize: 40,
         fontWeight: 'bold',
-        paddingBottom: 20,
-        color: "#010440",
+        paddingBottom: 10,
     },
     formContainer: {
         width: '100%',
         alignItems: 'center',
     },
-    inputGroup: {
-        width: 350,
-        marginBottom: 16,
-    },
-    label: {
-        fontWeight: 'bold',
-        color: "#010440",
-        fontSize: 18,
-        marginBottom: 4,
-    },
-    input: {
-        width: '100%',
-        height: 50,
-        backgroundColor: "#f2DCF1",
-        borderWidth: 2,
-        borderColor: "#1B0273",
-        borderRadius: 5,
-        paddingHorizontal: 10,
-        color: "black",
-        fontSize: 16,
-    },
     buttonEntrar: {
         width: 150,
         height: 50,
-        backgroundColor: "#5288F2",
+        backgroundColor: "#fcb408",
         borderWidth: 2,
-        borderColor: "#1B0273",
+        borderColor: "#e28d01",
         borderRadius: 5,
         justifyContent: 'center',
         alignItems: 'center',
@@ -173,7 +147,7 @@ const styles = StyleSheet.create({
     },
     textButton: {
         fontWeight: 'bold',
-        color: "#F2F2F2",
+        color: "white",
         fontSize: 25,
     },
     textoPossuiConta: {
@@ -186,19 +160,12 @@ const styles = StyleSheet.create({
         color: "white",
         fontSize: 15,
     },
-    textoCadastro: {
-        fontWeight: 'bold',
-        color: "#ADD8E6",
-        fontSize: 15,
-        marginLeft: 5,
-    },
     errorText: {
-        color: "red",
+        color: '#ba1206',
+        marginTop: 5,
         fontSize: 14,
-        marginTop: -12,
-        marginBottom: 12,
-        alignSelf: "flex-start",
-    
+        alignSelf: 'flex-start',
+        marginLeft: 10,
+        fontWeight: 'bold'
     },
-    
 });

@@ -17,6 +17,7 @@
     "axios": "^1.9.0",
     "expo": "~51.0.28",
     "expo-constants": "^17.1.6",
+    "expo-module-scripts": "^4.1.7",
     "expo-status-bar": "~1.12.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
