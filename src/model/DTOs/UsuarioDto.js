@@ -29,6 +29,12 @@ export class UsuarioDTO {
       if (!this.confirmarSenha) {
         erros.confirmarSenha = "Campo obrigatório."
       }
+      if (this.senha && this.senha.length < 6) {
+        erros.senha = "Senha deve ter no minimo 6 caracteres.";
+      }
+      if (this.confirmarSenha && this.confirmarSenha.length < 6) {
+        erros.confirmarSenha = "Senha deve ter no minimo 6 caracteres."
+      }
       return erros;
   }
   

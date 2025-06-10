@@ -31,8 +31,6 @@ export default function Cadastro({ navigation }) {
         const errosValidacao = novoUsuario.validarCampos();
         setErros(errosValidacao);
         setIsValid(Object.keys(errosValidacao).length === 0);
-        console.log("Erros:", errosValidacao);
-        console.log("isValid:", Object.keys(errosValidacao).length === 0);
 
     }, [usuario]);
 
