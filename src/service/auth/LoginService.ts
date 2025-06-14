@@ -36,3 +36,12 @@ export async function login(email, senha) {
     }
   }
 }
+
+export async function sair() {
+  try {
+    await AsyncStorage.removeItem('token');
+    return true;
+  } catch (error) {
+    throw new Error('Erro ao fazer logout: ' + error.message);
+  }
+}

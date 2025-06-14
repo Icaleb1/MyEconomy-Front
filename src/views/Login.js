@@ -26,13 +26,15 @@ export default function Login({ navigation }) {
         try {
             const userData = await login(loginDto.email, loginDto.senha);
             mostrarToast('success', 'Sucesso', 'Login realizado com sucesso!');
-            setTimeout(() => navigation.navigate("telaInicial"), 1500);
+            setTimeout(() => navigation.navigate("home"), 1500);
         } catch (error) {
             mostrarToast('error', 'Erro no Login', error.message || "Ocorreu um erro ao fazer login");
         } finally {
             setIsLoading(false);
         }
     };
+
+
 
     const nvgCadastro = () => {
         navigation.navigate("cadastro");
