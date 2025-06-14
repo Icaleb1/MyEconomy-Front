@@ -11,20 +11,25 @@ export default function Login({ navigation }) {
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        const valido = loginDto.email.trim() !== '' && loginDto.senha.trim() !== '';
-        setIsValid(valido);
+        setIsValid(loginDto.isValid());
     }, [loginDto]);
+    
 
     const handleChange = (campo, valor) => {
-        setLoginDto({ ...loginDto, [campo]: valor });
+        setLoginDto(prev => {
+            const novo = new LoginDTO(prev.email, prev.senha);
+            novo[campo] = valor;
+            return novo;
+        });
     };
+    
 
     const handleLogin = async () => {
         if (!isValid) return;
 
         setIsLoading(true);
         try {
-            const userData = await login(loginDto.email, loginDto.senha);
+            await login(loginDto.toJSON());
             mostrarToast('success', 'Sucesso', 'Login realizado com sucesso!');
             setTimeout(() => navigation.navigate("home"), 1500);
         } catch (error) {
@@ -33,8 +38,6 @@ export default function Login({ navigation }) {
             setIsLoading(false);
         }
     };
-
-
 
     const nvgCadastro = () => {
         navigation.navigate("cadastro");

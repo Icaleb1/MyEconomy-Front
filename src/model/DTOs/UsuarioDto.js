@@ -1,3 +1,5 @@
+import { parse } from 'date-fns';
+
 export class UsuarioDTO {
     constructor(nome, email, dataNascimento, senha, confirmarSenha) {
       this.nome = nome;
@@ -37,15 +39,23 @@ export class UsuarioDTO {
       }
       return erros;
   }
-  
-  
-    toJSON() {
-      return {
-        nome: this.nome,
-        email: this.email,
-        dataNascimento: this.dataNascimento,
-        senha: this.senha,
-      };
-    }
+
+  isValid() {
+    const erros = this.validarCampos();
+    return Object.keys(erros).length === 0;
   }
   
+  
+
+  toJSON() {
+    const parsedDate = parse(this.dataNascimento, 'dd/MM/yyyy', new Date());
+  
+    return {
+      nome: this.nome,
+      email: this.email,
+      dataNascimento: parsedDate,
+      senha: this.senha,
+      confirmarSenha: this.confirmarSenha,
+    };
+  } 
+}

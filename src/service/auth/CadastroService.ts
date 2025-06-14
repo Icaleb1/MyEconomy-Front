@@ -1,13 +1,12 @@
+import { UsuarioDTO } from "../../model/DTOs/UsuarioDto";
 import api from "../Api";
 
-export async function cadastrar(nome, email, dataNascimento, senha, confirmarSenha) {
-    if (senha !== confirmarSenha) {
-      throw new Error('As senhas não coincidem');
-    }
-  
+export async function cadastrar(usuario: UsuarioDTO) {
     try {
-      const response = await api.post('/cadastro', { nome, email, dataNascimento, senha, confirmarSenha });
+      console.log(usuario)
+      const response = await api.post('/cadastro',  usuario );
       return response.data;
+
     } catch (error) {
       if (error.response) {
         const errorMessage = error.response.data.error ||

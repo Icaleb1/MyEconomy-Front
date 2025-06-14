@@ -7,6 +7,7 @@ import { ActivityIndicator, View } from 'react-native';
 import Login from './src/views/Login';
 import Home from './src/views/Home';
 import Perfil from './src/views/Perfil';
+import Limite from './src/views/Limite';
 
 const Stack = createNativeStackNavigator();
 
@@ -37,6 +38,7 @@ export default function Layout() {
         <Stack.Screen name="login" component={Login} options={{ headerShown: false }} />
         <Stack.Screen name="home" component={Home} options={{ headerShown: false }}/>
         <Stack.Screen name="perfil" component={Perfil} options={{ headerShown: false }}/>
+        <Stack.Screen name="limite" component={Limite} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

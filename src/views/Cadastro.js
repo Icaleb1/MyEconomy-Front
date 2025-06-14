@@ -1,65 +1,71 @@
 import React, { useState, useEffect } from "react";
 import {
-    StyleSheet,
-    Text,
-    View,
-    TouchableOpacity,
+    StyleSheet, Text, View, TextInput,
+    TouchableOpacity, Platform
 } from 'react-native';
-
-import Toast from "react-native-toast-message";
-import { mostrarToast } from '../components/Toast';
+import Toast from 'react-native-toast-message';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { UsuarioDTO } from "../model/DTOs/UsuarioDto";
-import Input from "../components/Input";
 import { cadastrar } from "../service/auth/CadastroService";
+import { mostrarToast } from "../components/Toast";
+import { TextInputMask } from "react-native-masked-text";
 
 export default function Cadastro({ navigation }) {
     const [usuario, setUsuario] = useState(new UsuarioDTO('', '', '', '', ''));
     const [isValid, setIsValid] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [erros, setErros] = useState({});
-
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     useEffect(() => {
-        const novoUsuario = new UsuarioDTO(
-            usuario.nome,
-            usuario.email,
-            usuario.dataNascimento,
-            usuario.senha,
-            usuario.confirmarSenha
-        );
-
-        const errosValidacao = novoUsuario.validarCampos();
-        setErros(errosValidacao);
-        setIsValid(Object.keys(errosValidacao).length === 0);
-
+        setIsValid(usuario.isValid());
     }, [usuario]);
 
     const handleChange = (campo, valor) => {
-        setUsuario({ ...usuario, [campo]: valor });
+        setUsuario(prev => {
+            const novo = new UsuarioDTO(
+                prev.nome,
+                prev.email,
+                prev.dataNascimento,
+                prev.senha,
+                prev.confirmarSenha
+            );
+            novo[campo] = valor;
+            return novo;
+        });
     };
 
     const handleCadastro = async () => {
-        if (!isValid) return;
+        const errosValidacao = usuario.validarCampos();
+        setErros(errosValidacao);
+
+        if (Object.keys(errosValidacao).length > 0) {
+            mostrarToast('error', 'Erro', 'Verifique os campos do formulário.');
+            return;
+        }
 
         setIsLoading(true);
         try {
-            const dto = new UsuarioDTO(
-                usuario.nome,
-                usuario.email,
-                usuario.dataNascimento,
-                usuario.senha,
-                usuario.confirmarSenha
-            );
-
-            await cadastrar(dto.nome, dto.email, dto.dataNascimento, dto.senha, dto.confirmarSenha);
+            await cadastrar(usuario.toJSON());
             mostrarToast('success', 'Sucesso', 'Cadastro realizado com sucesso!');
             setTimeout(() => navigation.navigate("login"), 1500);
-
         } catch (error) {
             mostrarToast('error', 'Erro no Cadastro', error.message || "Erro ao cadastrar");
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const formatDateToDDMMYYYY = (date) => {
+        const dia = String(date.getDate()).padStart(2, '0');
+        const mes = String(date.getMonth() + 1).padStart(2, '0');
+        const ano = date.getFullYear();
+        return `${dia}/${mes}/${ano}`;
+    };
+
+    const stringToDate = (dataStr) => {
+        const [dia, mes, ano] = dataStr.split('/');
+        return new Date(`${ano}-${mes}-${dia}`);
     };
 
     const nvgLogin = () => {
@@ -71,26 +77,75 @@ export default function Cadastro({ navigation }) {
             <Text style={styles.tituloInicial}>Cadastro</Text>
 
             <View style={styles.formContainer}>
-                <View>
-                    <Input label="Nome" value={usuario.nome} onChange={value => handleChange("nome", value)} />
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Nome: *</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Digite seu nome"
+                        placeholderTextColor="#555"
+                        value={usuario.nome}
+                        onChangeText={(text) => handleChange("nome", text)}
+                    />
                     {erros.nome && <Text style={styles.errorText}>{erros.nome}</Text>}
                 </View>
-                <View>
-                    <Input label="Email" value={usuario.email} onChange={value => handleChange("email", value)} keyboardType="email-address" />
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Email: *</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Digite seu email"
+                        keyboardType="email-address"
+                        placeholderTextColor="#555"
+                        value={usuario.email}
+                        onChangeText={(text) => handleChange("email", text)}
+                        autoCapitalize="none"
+                    />
                     {erros.email && <Text style={styles.errorText}>{erros.email}</Text>}
                 </View>
-                <View>
-                    <Input label="Data de Nascimento" value={usuario.dataNascimento} onChange={value => handleChange("dataNascimento", value)} />
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Data de Nascimento: *</Text>
+                    <TextInputMask
+                        type={'datetime'}
+                        options={{
+                            format: 'DD/MM/YYYY'
+                        }}
+                        style={styles.input}
+                        placeholder="DD/MM/AAAA"
+                        placeholderTextColor="#555"
+                        value={usuario.dataNascimento}
+                        onChangeText={(text) => handleChange("dataNascimento", text)}
+                    />
                     {erros.dataNascimento && <Text style={styles.errorText}>{erros.dataNascimento}</Text>}
                 </View>
-                <View>
-                    <Input label="Senha" value={usuario.senha} onChange={value => handleChange("senha", value)} secureTextEntry />
+
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Senha: *</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Digite sua senha"
+                        secureTextEntry
+                        placeholderTextColor="#555"
+                        value={usuario.senha}
+                        onChangeText={(text) => handleChange("senha", text)}
+                    />
                     {erros.senha && <Text style={styles.errorText}>{erros.senha}</Text>}
                 </View>
-                <View>
-                    <Input label="Confirmar Senha" value={usuario.confirmarSenha} onChange={value => handleChange("confirmarSenha", value)} secureTextEntry />
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Confirmar Senha: *</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Confirme sua senha"
+                        secureTextEntry
+                        placeholderTextColor="#555"
+                        value={usuario.confirmarSenha}
+                        onChangeText={(text) => handleChange("confirmarSenha", text)}
+                    />
                     {erros.confirmarSenha && <Text style={styles.errorText}>{erros.confirmarSenha}</Text>}
                 </View>
+
                 <TouchableOpacity
                     style={[styles.buttonEntrar, !isValid && styles.buttonDisabilitado]}
                     onPress={handleCadastro}
@@ -107,13 +162,10 @@ export default function Cadastro({ navigation }) {
                     </TouchableOpacity>
                 </View>
             </View>
-
             <Toast />
         </View>
     );
 }
-
-
 
 const styles = StyleSheet.create({
     container: {
@@ -123,11 +175,10 @@ const styles = StyleSheet.create({
         paddingTop: 100,
     },
     tituloInicial: {
-        color: "white",
+        color: "#010440",
         fontSize: 40,
         fontWeight: 'bold',
         paddingBottom: 20,
-        color: "#010440",
     },
     formContainer: {
         width: '100%',
@@ -150,9 +201,8 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: "#1B0273",
         borderRadius: 5,
+        justifyContent: 'center',
         paddingHorizontal: 10,
-        color: "black",
-        fontSize: 16,
     },
     buttonEntrar: {
         width: 150,
@@ -196,7 +246,5 @@ const styles = StyleSheet.create({
         marginTop: -12,
         marginBottom: 12,
         alignSelf: "flex-start",
-    
     },
-    
 });

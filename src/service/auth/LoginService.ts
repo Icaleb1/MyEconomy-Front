@@ -1,9 +1,10 @@
+import { LoginDTO } from "../../model/DTOs/LoginDto";
 import api from "../Api";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export async function login(email, senha) {
+export async function login(login: LoginDTO) {
   try {
-    const response = await api.post('/login', { email, senha });
+    const response = await api.post('/login', login);
     const data = response.data;
 
     if (data.token) {

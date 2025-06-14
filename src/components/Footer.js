@@ -6,7 +6,7 @@ export default function Footer({ navigation, currentScreen }) {
         { key: 'perfil', label: 'Perfil', screen: 'perfil' },
         { key: 'home', label: 'Home', screen: 'home' },
         { key: 'despesas', label: 'Despesas', screen: 'despesas' },
-        { key: 'limites', label: 'Limites', screen: 'limites' },
+        { key: 'limite', label: 'Limites', screen: 'limite' },
     ];
 
     const handleNavigation = (screen) => {
