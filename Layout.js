@@ -8,6 +8,7 @@ import Login from './src/views/Login';
 import Home from './src/views/Home';
 import Perfil from './src/views/Perfil';
 import Limite from './src/views/Limite';
+import Despesa from './src/views/Despesa';
 
 const Stack = createNativeStackNavigator();
 
@@ -16,9 +17,12 @@ export default function Layout() {
 
   useEffect(() => {
     const checkAuth = async () => {
-    
-        setInitialRoute('cadastro');
-    
+      const token = await AsyncStorage.getItem('token');
+      if(!token) {
+        setInitialRoute('login');
+      } else {
+        setInitialRoute('home')
+      }  
     };
     checkAuth();
   }, []);
@@ -39,6 +43,7 @@ export default function Layout() {
         <Stack.Screen name="home" component={Home} options={{ headerShown: false }}/>
         <Stack.Screen name="perfil" component={Perfil} options={{ headerShown: false }}/>
         <Stack.Screen name="limite" component={Limite} options={{ headerShown: false }} />
+        <Stack.Screen name="despesa" component={Despesa} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
