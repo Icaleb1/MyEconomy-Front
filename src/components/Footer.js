@@ -5,7 +5,7 @@ export default function Footer({ navigation, currentScreen }) {
     const menuItems = [
         { key: 'perfil', label: 'Perfil', screen: 'perfil' },
         { key: 'home', label: 'Home', screen: 'home' },
-        { key: 'despesas', label: 'Despesas', screen: 'despesas' },
+        { key: 'despesa', label: 'Despesas', screen: 'despesa' },
         { key: 'limite', label: 'Limites', screen: 'limite' },
     ];
 
