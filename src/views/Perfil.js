@@ -5,7 +5,6 @@ import {
     View,
     TouchableOpacity,
     ScrollView,
-    TextInput,
 } from 'react-native';
 import Footer from '../components/Footer';
 import { sair } from "../service/auth/LoginService";

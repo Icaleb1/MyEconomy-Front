@@ -52,7 +52,7 @@ export async function buscarLimite(mes: number, ano: number) {
       return response.data;
     } catch (error) {
       if (error.response) {
-        throw new Error(error.response.data?.error || 'Erro ao buscar perfil');
+        throw new Error(error.response.data?.error || 'Erro ao buscar limite');
       } else if (error.request) {
         throw new Error('Servidor não respondeu. Verifique sua conexão.');
       } else {

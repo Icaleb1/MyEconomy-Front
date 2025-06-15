@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, TextInput, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { LoginDTO } from "../model/DTOs/LoginDto";
 import { login } from "../service/auth/LoginService";
 import { mostrarToast } from "../components/Toast";
+import Input from "../components/Input";
 
 export default function Login({ navigation }) {
     const [loginDto, setLoginDto] = useState(new LoginDTO());
@@ -13,7 +14,6 @@ export default function Login({ navigation }) {
     useEffect(() => {
         setIsValid(loginDto.isValid());
     }, [loginDto]);
-    
 
     const handleChange = (campo, valor) => {
         setLoginDto(prev => {
@@ -22,7 +22,6 @@ export default function Login({ navigation }) {
             return novo;
         });
     };
-    
 
     const handleLogin = async () => {
         if (!isValid) return;
@@ -48,30 +47,22 @@ export default function Login({ navigation }) {
             <Text style={styles.tituloInicial}>Login</Text>
 
             <View style={styles.formContainer}>
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Email: *</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Digite seu email"
-                        keyboardType="email-address"
-                        placeholderTextColor="#555"
-                        value={loginDto.email}
-                        onChangeText={(text) => handleChange("email", text)}
-                        autoCapitalize="none"
-                    />
-                </View>
+                <Input
+                    label="Email: *"
+                    value={loginDto.email}
+                    onChange={(text) => handleChange("email", text)}
+                    placeholder="Digite seu email"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                />
 
-                <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Senha: *</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Digite sua senha"
-                        secureTextEntry={true}
-                        placeholderTextColor="#555"
-                        value={loginDto.senha}
-                        onChangeText={(text) => handleChange("senha", text)}
-                    />
-                </View>
+                <Input
+                    label="Senha: *"
+                    value={loginDto.senha}
+                    onChange={(text) => handleChange("senha", text)}
+                    placeholder="Digite sua senha"
+                    secureTextEntry
+                />
 
                 <TouchableOpacity
                     style={[styles.buttonEntrar, !isValid && styles.buttonDisabilitado]}
@@ -89,11 +80,11 @@ export default function Login({ navigation }) {
                     </TouchableOpacity>
                 </View>
             </View>
+
             <Toast />
         </View>
     );
 }
-
 
 
 const styles = StyleSheet.create({
