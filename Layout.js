@@ -16,9 +16,12 @@ export default function Layout() {
 
   useEffect(() => {
     const checkAuth = async () => {
-    
-        setInitialRoute('cadastro');
-    
+      const token = await AsyncStorage.getItem('token');
+      if(!token) {
+        setInitialRoute('login');
+      } else {
+        setInitialRoute('home')
+      }  
     };
     checkAuth();
   }, []);
