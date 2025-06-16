@@ -138,7 +138,7 @@ export default function Despesa({ navigation }) {
                 )}
             </ScrollView>
 
-            <Footer navigation={navigation} currentScreen="despesas" />
+            <Footer navigation={navigation} currentScreen="despesa" />
         </View>
     );
 }
