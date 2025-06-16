@@ -13,6 +13,7 @@ import { DespesaDTO } from "../model/DTOs/DespesaDto";
 import { mostrarToast } from "../components/Toast";
 import Input from '../components/Input';
 import InputSelect from '../components/InputSelect';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Despesa({ navigation }) {
     const [valor, setValor] = useState('');
@@ -76,7 +77,12 @@ export default function Despesa({ navigation }) {
     };
 
     return (
-        <View style={styles.container}>
+        <LinearGradient
+            colors={['#F2C4B3', '#FFA07A']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.container}
+        >
             <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 <Text style={styles.title}>Gerenciar Despesas 🧾</Text>
 
@@ -139,12 +145,12 @@ export default function Despesa({ navigation }) {
             </ScrollView>
 
             <Footer navigation={navigation} currentScreen="despesa" />
-        </View>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#F2C4B3", alignItems: 'center' },
+    container: { flex: 1, alignItems: 'center' },
     scrollContainer: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 100 },
     title: {
         fontSize: 28,

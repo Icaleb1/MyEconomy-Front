@@ -10,6 +10,7 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { ProgressBar } from 'react-native-paper';
 import Footer from '../components/Footer';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Home({ navigation }) {
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
@@ -50,7 +51,12 @@ export default function Home({ navigation }) {
     }, [selectedMonth]);
 
     return (
-        <View style={styles.container}>
+        <LinearGradient
+            colors={['#F2C4B3', '#FFA07A']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.container}
+        >
             <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 <View style={styles.headerContainer}>
                     <Text style={styles.welcomeTitle}>Bem-vindo! 👋</Text>
@@ -128,14 +134,13 @@ export default function Home({ navigation }) {
             </Modal>
 
             <Footer navigation={navigation} currentScreen="home" />
-        </View>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#F2C4B3",
     },
     scrollContainer: {
         flex: 1,
