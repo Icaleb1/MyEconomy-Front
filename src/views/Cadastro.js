@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import {
-    StyleSheet, Text, View,
-    TouchableOpacity
+    StyleSheet,
+    Text,
+    View,
+    TouchableOpacity,
 } from 'react-native';
-import Toast from 'react-native-toast-message';
+
+import Toast from "react-native-toast-message";
+import { mostrarToast } from '../components/Toast';
 import { UsuarioDTO } from "../model/DTOs/UsuarioDto";
-import { cadastrar } from "../service/auth/CadastroService";
-import { mostrarToast } from "../components/Toast";
 import Input from "../components/Input";
+import { cadastrar } from "../service/auth/CadastroService";
 import InputMasked from "../components/InputMasked";
 
 export default function Cadastro({ navigation }) {
@@ -16,45 +19,48 @@ export default function Cadastro({ navigation }) {
     const [isLoading, setIsLoading] = useState(false);
     const [erros, setErros] = useState({});
 
+
     useEffect(() => {
-        setIsValid(usuario.isValid());
+        const novoUsuario = new UsuarioDTO(
+            usuario.nome,
+            usuario.email,
+            usuario.dataNascimento,
+            usuario.senha,
+            usuario.confirmarSenha
+        );
+
+        const errosValidacao = novoUsuario.validarCampos();
+        setErros(errosValidacao);
+        setIsValid(Object.keys(errosValidacao).length === 0);
+
     }, [usuario]);
 
     const handleChange = (campo, valor) => {
-        setUsuario(prev => {
-            const novo = new UsuarioDTO(
-                prev.nome,
-                prev.email,
-                prev.dataNascimento,
-                prev.senha,
-                prev.confirmarSenha
-            );
-            novo[campo] = valor;
-            return novo;
-        });
+        setUsuario({ ...usuario, [campo]: valor });
     };
 
     const handleCadastro = async () => {
-        const errosValidacao = usuario.validarCampos();
-        setErros(errosValidacao);
-
-        if (Object.keys(errosValidacao).length > 0) {
-            mostrarToast('error', 'Erro', 'Verifique os campos do formulário.');
-            return;
-        }
+        if (!isValid) return;
 
         setIsLoading(true);
         try {
-            await cadastrar(usuario.toJSON());
+            const dto = new UsuarioDTO(
+                usuario.nome,
+                usuario.email,
+                usuario.dataNascimento,
+                usuario.senha,
+                usuario.confirmarSenha
+            );
+            await cadastrar(dto.nome, dto.email, dto.dataNascimento, dto.senha, dto.confirmarSenha);
             mostrarToast('success', 'Sucesso', 'Cadastro realizado com sucesso!');
             setTimeout(() => navigation.navigate("login"), 1500);
+
         } catch (error) {
             mostrarToast('error', 'Erro no Cadastro', error.message || "Erro ao cadastrar");
         } finally {
             setIsLoading(false);
         }
     };
-
 
     const nvgLogin = () => {
         navigation.navigate("login");
@@ -65,56 +71,48 @@ export default function Cadastro({ navigation }) {
             <Text style={styles.tituloInicial}>Cadastro</Text>
 
             <View style={styles.formContainer}>
-
                 <Input
                     label="Nome: *"
                     value={usuario.nome}
-                    onChange={(text) => handleChange("nome", text)}
-                    placeholder="Digite seu nome"
-                    placeholderTextColor="#555"
+                    onChange={value => handleChange("nome", value)}
                     error={erros.nome}
+                    placeholder={"Digite seu nome"}
                 />
 
                 <Input
                     label="Email: *"
                     value={usuario.email}
-                    onChange={(text) => handleChange("email", text)}
-                    placeholder="Digite seu email"
-                    placeholderTextColor="#555"
+                    onChange={value => handleChange("email", value)}
                     keyboardType="email-address"
-                    autoCapitalize="none"
                     error={erros.email}
+                    placeholder={"email@gmail.com"}
                 />
 
                 <InputMasked
                     label="Data de Nascimento: *"
                     value={usuario.dataNascimento}
-                    onChange={(text) => handleChange("dataNascimento", text)}
+                    onChange={value => handleChange("dataNascimento", value)}
+                    error={erros.dataNascimento}
+                    placeholder="dd/mm/yyyy"
                     type="datetime"
                     options={{ format: "DD/MM/YYYY" }}
-                    placeholder="DD/MM/AAAA"
-                    placeholderTextColor="#555"
-                    error={erros.dataNascimento}
                 />
-
                 <Input
                     label="Senha: *"
                     value={usuario.senha}
-                    onChange={(text) => handleChange("senha", text)}
-                    placeholder="Digite sua senha"
-                    placeholderTextColor="#555"
+                    onChange={value => handleChange("senha", value)}
                     secureTextEntry
                     error={erros.senha}
+                    placeholder={"Digite sua senha"}
                 />
 
                 <Input
                     label="Confirmar Senha: *"
                     value={usuario.confirmarSenha}
-                    onChange={(text) => handleChange("confirmarSenha", text)}
-                    placeholder="Confirme sua senha"
-                    placeholderTextColor="#555"
+                    onChange={value => handleChange("confirmarSenha", value)}
                     secureTextEntry
                     error={erros.confirmarSenha}
+                    placeholder={"Confirme sua senha"}
                 />
 
                 <TouchableOpacity
@@ -137,7 +135,10 @@ export default function Cadastro({ navigation }) {
             <Toast />
         </View>
     );
-};
+}
+
+
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -146,10 +147,11 @@ const styles = StyleSheet.create({
         paddingTop: 100,
     },
     tituloInicial: {
-        color: "#010440",
+        color: "white",
         fontSize: 40,
         fontWeight: 'bold',
         paddingBottom: 20,
+        color: "#010440",
     },
     formContainer: {
         width: '100%',
@@ -172,8 +174,9 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: "#1B0273",
         borderRadius: 5,
-        justifyContent: 'center',
         paddingHorizontal: 10,
+        color: "black",
+        fontSize: 16,
     },
     buttonEntrar: {
         width: 150,
@@ -217,5 +220,7 @@ const styles = StyleSheet.create({
         marginTop: -12,
         marginBottom: 12,
         alignSelf: "flex-start",
+
     },
+
 });
