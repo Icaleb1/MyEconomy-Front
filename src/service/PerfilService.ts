@@ -1,5 +1,6 @@
 import api from "./Api";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ErrorHandler } from "./Handler/ErrorHandler";
 
 export async function buscarPerfil() {
   try {
@@ -13,13 +14,7 @@ export async function buscarPerfil() {
     });
 
     return response.data;
-  } catch (error) {
-    if (error.response) {
-      throw new Error(error.response.data?.error || 'Erro ao buscar perfil');
-    } else if (error.request) {
-      throw new Error('Servidor não respondeu. Verifique sua conexão.');
-    } else {
-      throw new Error('Erro na requisição: ' + error.message);
-    }
+  } catch (error: any) {
+    throw new Error(ErrorHandler.tratarErroRequisicao(error));
   }
 }
