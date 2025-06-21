@@ -1,18 +1,22 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Footer from '../components/Footer';
-import { buscarLimite, criarLimite } from "../service/LimiteService";
+import { buscarLimite, criarLimite, editarLimite, excluirLimite } from "../service/LimiteService";
 import { LimiteDTO } from "../model/DTOs/LimiteDto";
 import { mostrarToast } from "../components/Toast";
 import Input from '../components/Input';
 import InputSelect from '../components/InputSelect';
+import LimiteModal from "../components/LimiteModal";
 
 export default function Limite({ navigation }) {
     const [valor, setValor] = useState('');
     const [mesCadastro, setMesCadastro] = useState('');
     const [mesBusca, setMesBusca] = useState('');
     const [limiteBuscado, setLimiteBuscado] = useState(null);
+    const [modalVisivel, setModalVisivel] = useState(false);
+    const [idLimiteAtual, setIdLimiteAtual] = useState(null);
+
 
     const mesAtual = new Date().getMonth() + 1;
     const anoAtual = new Date().getFullYear();
@@ -48,25 +52,50 @@ export default function Limite({ navigation }) {
 
     const handleBuscarLimite = async () => {
         const mesNum = parseInt(mesBusca);
-
+    
         if (!mesBusca || isNaN(mesNum)) {
             mostrarToast("error", "Erro", "Selecione um mês válido.");
             return;
         }
-
+    
         try {
             const limite = await buscarLimite(mesNum, anoAtual);
             if (limite) {
                 setLimiteBuscado(limite.valor);
+                setIdLimiteAtual(limite.id); 
                 mostrarToast("success", "Limite encontrado", `R$ ${limite.valor}`);
             } else {
                 setLimiteBuscado(null);
+                setIdLimiteAtual(null); 
                 mostrarToast("info", "Sem limite", "Nenhum limite cadastrado para esse mês.");
             }
         } catch (error) {
             mostrarToast("error", "Erro", error.message || "Falha ao buscar limite.");
         }
     };
+    
+
+    const handleEditar = () => {
+        if (limiteBuscado && mesBusca >= mesAtual) {
+            setModalVisivel(true);
+        } else {
+            mostrarToast("error", "Edição não permitida", "Só é possível editar limites do mês atual ou posterior.");
+        }
+    };
+
+    const salvarEdicao = async (novoValor) => {
+        try {
+            const id = idLimiteAtual;
+            if (!id) return;
+            await editarLimite(id, novoValor);
+            mostrarToast("success", "Limite atualizado", "Novo valor salvo.");
+            setModalVisivel(false);
+            setLimiteBuscado(novoValor);
+        } catch (error) {
+            mostrarToast("error", "Erro ao editar", error.message);
+        }
+    };
+
 
     return (
         <LinearGradient
@@ -109,16 +138,55 @@ export default function Limite({ navigation }) {
                 </TouchableOpacity>
 
                 {limiteBuscado !== null && (
-                    <Text style={styles.resultado}>
-                        Limite para o mês selecionado: {limiteBuscado.toLocaleString('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL'
-                        })}
-                    </Text>
+                    <View>
+                        <Text style={styles.resultado}>
+                            Limite para o mês selecionado: {limiteBuscado.toLocaleString('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                            })}
+                        </Text>
+
+                        <TouchableOpacity style={styles.saveButton} onPress={handleEditar}>
+                            <Text style={styles.saveButtonText}>Editar Limite</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.saveButton, { backgroundColor: '#E74C3C' }]}
+                            onPress={() => {
+                                Alert.alert(
+                                    "Confirmar exclusão",
+                                    "Tem certeza que deseja excluir este limite?",
+                                    [
+                                        { text: "Cancelar", style: "cancel" },
+                                        {
+                                            text: "Excluir",
+                                            style: "destructive",
+                                            onPress: async () => {
+                                                try {
+                                                    await excluirLimite(idLimiteAtual);
+                                                    setLimiteBuscado(null);
+                                                    mostrarToast("success", "Limite excluído", "Limite foi removido.");
+                                                } catch (error) {
+                                                    mostrarToast("error", "Erro ao excluir", error.message);
+                                                }
+                                            }
+                                        }
+                                    ]
+                                );
+                            }}
+                        >
+                            <Text style={styles.saveButtonText}>Excluir Limite</Text>
+                        </TouchableOpacity>
+                    </View>
                 )}
             </ScrollView>
-
             <Footer navigation={navigation} currentScreen="limite" />
+            <LimiteModal
+                visible={modalVisivel}
+                onClose={() => setModalVisivel(false)}
+                onSalvar={salvarEdicao}
+                valorAtual={limiteBuscado}
+            />
         </LinearGradient>
     );
 }
