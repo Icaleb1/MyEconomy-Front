@@ -2,16 +2,18 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { TextInputMask } from 'react-native-masked-text';
 
-export default function InputMasked({ label, value, onChange, type, options, error, ...props }) {
+export default function InputMasked({ label, value, onChange, type, options, error, placeholder, ...props }) {
   return (
     <View style={styles.inputGroup}>
       <Text style={styles.label}>{label}</Text>
       <TextInputMask
         type={type}
-        options={options}
+        options={{format:"dd/mm/yyyy"}}
         style={[styles.input, error && { borderColor: 'red' }]}
         value={value}
         onChangeText={onChange}
+        placeholder={placeholder}
+        placeholderTextColor="gray"
         {...props}
       />
       {error && <Text style={styles.errorText}>{error}</Text>}
