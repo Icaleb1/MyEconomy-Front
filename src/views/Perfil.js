@@ -9,6 +9,7 @@ import {
 import Footer from '../components/Footer';
 import { sair } from "../service/auth/LoginService";
 import { buscarPerfil } from "../service/PerfilService";
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Perfil({ navigation }) {
     const [profileData, setProfileData] = useState({
@@ -44,7 +45,12 @@ export default function Perfil({ navigation }) {
     }
 
     return (
-        <View style={styles.container}>
+        <LinearGradient
+            colors={['#F2C4B3', '#FFA07A']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.container}
+        >
             <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 <Text style={styles.title}>Meu Perfil 👤</Text>
 
@@ -70,7 +76,7 @@ export default function Perfil({ navigation }) {
             </ScrollView>
 
             <Footer navigation={navigation} currentScreen="perfil" />
-        </View>
+        </LinearGradient>
     );
 }
 
@@ -78,7 +84,6 @@ export default function Perfil({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#F2C4B3",
     },
     scrollContainer: {
         paddingTop: 60,

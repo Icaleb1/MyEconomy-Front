@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Footer({ navigation, currentScreen }) {
     const menuItems = [
@@ -16,7 +17,12 @@ export default function Footer({ navigation, currentScreen }) {
     };
 
     return (
-        <View style={styles.footerContainer}>
+        <LinearGradient
+            colors={['#010440', '#1B0273']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.footerContainer}
+        >
             {menuItems.map((item) => (
                 <TouchableOpacity
                     key={item.key}
@@ -34,7 +40,7 @@ export default function Footer({ navigation, currentScreen }) {
                     </Text>
                 </TouchableOpacity>
             ))}
-        </View>
+        </LinearGradient>
     );
 }
 
@@ -45,7 +51,6 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         flexDirection: 'row',
-        backgroundColor: '#010440',
         paddingVertical: 15,
         paddingHorizontal: 10,
         borderTopWidth: 2,

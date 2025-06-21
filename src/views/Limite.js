@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Footer from '../components/Footer';
 import { buscarLimite, criarLimite } from "../service/LimiteService";
 import { LimiteDTO } from "../model/DTOs/LimiteDto";
@@ -68,7 +69,12 @@ export default function Limite({ navigation }) {
     };
 
     return (
-        <View style={styles.container}>
+        <LinearGradient
+            colors={['#F2C4B3', '#FFA07A']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.container}
+        >
             <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 <Text style={styles.title}>Gerenciar Limites 💸</Text>
 
@@ -113,12 +119,12 @@ export default function Limite({ navigation }) {
             </ScrollView>
 
             <Footer navigation={navigation} currentScreen="limite" />
-        </View>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#F2C4B3", alignItems: 'center' },
+    container: { flex: 1, alignItems: 'center' },
     scrollContainer: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 100 },
     title: {
         fontSize: 28,

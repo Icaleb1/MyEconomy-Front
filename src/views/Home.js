@@ -10,12 +10,16 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { ProgressBar } from 'react-native-paper';
 import Footer from '../components/Footer';
+import { LinearGradient } from 'expo-linear-gradient';
+import { buscarLimite } from "../service/LimiteService";
+import { buscarDespesas } from "../service/DespesaService";
+import { mostrarToast } from "../components/Toast";
 
 export default function Home({ navigation }) {
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     const [modalVisible, setModalVisible] = useState(false);
-    const [monthlyLimit, setMonthlyLimit] = useState(2000); // Limite exemplo
-    const [monthlyExpenses, setMonthlyExpenses] = useState(2100); // Gastos exemplo
+    const [monthlyLimit, setMonthlyLimit] = useState(0);
+    const [monthlyExpenses, setMonthlyExpenses] = useState(0);
     
     const months = [
         'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -43,14 +47,36 @@ export default function Home({ navigation }) {
 
     const feedbackData = getFeedbackData();
 
+    const carregarDadosDoMes = async () => {
+        try {
+            const anoAtual = new Date().getFullYear();
+            const mesSelecionado = selectedMonth + 1; // Convertendo de 0-11 para 1-12
+
+            // Buscar limite do mês
+            const limite = await buscarLimite(mesSelecionado, anoAtual);
+            setMonthlyLimit(limite?.valor || 0);
+
+            // Buscar despesas do mês
+            const despesas = await buscarDespesas(mesSelecionado, anoAtual);
+            const totalDespesas = despesas.reduce((total, despesa) => total + parseFloat(despesa.valor), 0);
+            setMonthlyExpenses(totalDespesas);
+
+        } catch (error) {
+            mostrarToast("error", "Erro", error.message || "Falha ao carregar dados do mês.");
+        }
+    };
+
     useEffect(() => {
-        // Aqui você pode carregar os dados reais do mês selecionado
-        // setMonthlyExpenses(getExpensesForMonth(selectedMonth));
-        // setMonthlyLimit(getLimitForMonth(selectedMonth));
+        carregarDadosDoMes();
     }, [selectedMonth]);
 
     return (
-        <View style={styles.container}>
+        <LinearGradient
+            colors={['#F2C4B3', '#FFA07A']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.container}
+        >
             <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 <View style={styles.headerContainer}>
                     <Text style={styles.welcomeTitle}>Bem-vindo! 👋</Text>
@@ -128,14 +154,13 @@ export default function Home({ navigation }) {
             </Modal>
 
             <Footer navigation={navigation} currentScreen="home" />
-        </View>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#F2C4B3",
     },
     scrollContainer: {
         flex: 1,

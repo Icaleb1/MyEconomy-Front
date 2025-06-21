@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import { LoginDTO } from "../model/DTOs/LoginDto";
 import { login } from "../service/auth/LoginService";
@@ -43,7 +44,12 @@ export default function Login({ navigation }) {
     };
 
     return (
-        <View style={styles.container}>
+        <LinearGradient
+            colors={['#F2C4B3', '#FFA07A']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.container}
+        >
             <Text style={styles.tituloInicial}>Login</Text>
 
             <View style={styles.formContainer}>
@@ -82,7 +88,7 @@ export default function Login({ navigation }) {
             </View>
 
             <Toast />
-        </View>
+        </LinearGradient>
     );
 }
 
@@ -90,7 +96,6 @@ export default function Login({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#F2C4B3",
         alignItems: 'center',
         paddingTop: 100,
     },

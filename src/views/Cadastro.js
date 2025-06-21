@@ -12,6 +12,7 @@ import { UsuarioDTO } from "../model/DTOs/UsuarioDto";
 import Input from "../components/Input";
 import { cadastrar } from "../service/auth/CadastroService";
 import InputMasked from "../components/InputMasked";
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function Cadastro({ navigation }) {
     const [usuario, setUsuario] = useState(new UsuarioDTO('', '', '', '', ''));
@@ -67,7 +68,12 @@ export default function Cadastro({ navigation }) {
     };
 
     return (
-        <View style={styles.container}>
+        <LinearGradient
+            colors={['#F2C4B3', '#FFA07A']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.container}
+        >
             <Text style={styles.tituloInicial}>Cadastro</Text>
 
             <View style={styles.formContainer}>
@@ -133,7 +139,7 @@ export default function Cadastro({ navigation }) {
             </View>
 
             <Toast />
-        </View>
+        </LinearGradient>
     );
 }
 
@@ -142,7 +148,6 @@ export default function Cadastro({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#F2C4B3",
         alignItems: 'center',
         paddingTop: 100,
     },
