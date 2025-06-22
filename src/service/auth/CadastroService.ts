@@ -2,7 +2,6 @@ import { UsuarioDTO } from "../../model/DTOs/UsuarioDto";
 import api from "../Api";
 
 export async function cadastrar(usuario: UsuarioDTO) {
-  console.log('Cadastrando usuário:', usuario);
     try {
       const response = await api.post('/cadastro',  usuario );
       return response.data;

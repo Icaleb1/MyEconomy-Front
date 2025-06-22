@@ -11,8 +11,9 @@ import StatusCards from "../components/StatusCards"
 import DateSelect from "../components/DateSelect"
 
 export default function Home({ navigation }) {
-    const anoAtual = new Date().getFullYear()
-    const mesAtual = new Date().getMonth() + 1
+    const agora = new Date()
+    const anoAtual = agora.getFullYear()
+    const mesAtual = agora.getMonth() + 1
 
     const [anoSelecionado, setAnoSelecionado] = useState(anoAtual.toString())
     const [mesSelecionado, setMesSelecionado] = useState(mesAtual.toString())
@@ -67,7 +68,7 @@ export default function Home({ navigation }) {
     const getPeriodoTexto = () => {
         if (!mesSelecionado || !anoSelecionado) return "Período não selecionado"
 
-        const mesNome = new Date(0, Number.parseInt(mesSelecionado) - 1).toLocaleString("pt-BR", { month: "long" })
+        const mesNome = new Date(2024, Number.parseInt(mesSelecionado) - 1).toLocaleString("pt-BR", { month: "long" })
         const mesCapitalizado = mesNome.charAt(0).toUpperCase() + mesNome.slice(1)
         return `${mesCapitalizado} de ${anoSelecionado}`
     }
