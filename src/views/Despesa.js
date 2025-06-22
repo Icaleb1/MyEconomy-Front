@@ -10,35 +10,52 @@ import { LinearGradient } from "expo-linear-gradient";
 import DespesaModal from "../components/DespesaModal";
 
 function DateSelect({ modo, anoSelecionado, mesSelecionado, onAnoChange, onMesChange }) {
-  const anoAtual = new Date().getFullYear();
-  const mesAtual = new Date().getMonth() + 1;
+  const agora = new Date();
+  const anoAtual = agora.getFullYear();
+  const mesAtual = agora.getMonth() + 1;
 
   const anos = useMemo(() => Array.from({ length: 30 }, (_, i) => (anoAtual + i).toString()), [anoAtual]);
   const mesesTodos = useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
 
   const mesesFiltrados = useMemo(() => {
     const anoNum = parseInt(anoSelecionado);
-    return modo === "cadastro"
-      ? mesesTodos.filter((mes) => anoNum > anoAtual || mes >= mesAtual)
-      : mesesTodos;
-  }, [modo, anoSelecionado, mesAtual, anoAtual]);
+    
+    if (isNaN(anoNum)) return [];
+    
+    if (modo === "cadastro") {
+      if (anoNum > anoAtual) {
+        return mesesTodos;
+      } else if (anoNum === anoAtual) {
+        const mesesValidos = mesesTodos.filter((mes) => mes >= mesAtual);
+        return mesesValidos;
+      } else {
+        return [];
+      }
+    }
+    
+    return mesesTodos;
+  }, [modo, anoSelecionado, mesAtual, anoAtual, mesesTodos]);
 
   const opcoesAno = useMemo(() => anos.map((ano) => ({ label: ano, value: ano })), [anos]);
+  
   const opcoesMes = useMemo(
     () =>
       mesesFiltrados.map((mes) => ({
-        label: new Date(0, mes - 1).toLocaleString("pt-BR", { month: "long" }),
+        label: new Date(2024, mes - 1).toLocaleString("pt-BR", { month: "long" }),
         value: mes.toString(),
       })),
     [mesesFiltrados]
   );
 
   useEffect(() => {
-    const mesValido = mesesFiltrados.includes(Number(mesSelecionado));
-    if (modo === "cadastro" && mesSelecionado && !mesValido) {
-      onMesChange("");
+    if (modo === "cadastro" && mesesFiltrados.length > 0) {
+      const mesValido = mesesFiltrados.includes(Number(mesSelecionado));
+      
+      if (!mesSelecionado || !mesValido) {
+        onMesChange(mesesFiltrados[0].toString());
+      }
     }
-  }, [anoSelecionado, mesesFiltrados]);
+  }, [anoSelecionado, mesesFiltrados, mesSelecionado, modo, onMesChange]);
 
   return (
     <View>
@@ -68,9 +85,6 @@ export default function Despesa({ navigation }) {
   const [despesas, setDespesas] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [despesaSelecionada, setDespesaSelecionada] = useState(null);
-
-  const anoAtual = new Date().getFullYear();
-  const mesAtual = new Date().getMonth() + 1;
 
   function abrirModalEdicao(despesa) {
     setDespesaSelecionada(despesa);
