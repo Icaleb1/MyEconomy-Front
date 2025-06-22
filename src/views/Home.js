@@ -1,161 +1,149 @@
-import React, { useState, useEffect } from "react";
-import {
-    StyleSheet,
-    Text,
-    View,
-    TouchableOpacity,
-    Modal,
-    ScrollView,
-} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { ProgressBar } from 'react-native-paper';
-import Footer from '../components/Footer';
-import { LinearGradient } from 'expo-linear-gradient';
-import { buscarLimite } from "../service/LimiteService";
-import { buscarDespesas } from "../service/DespesaService";
-import { mostrarToast } from "../components/Toast";
+"use client"
+
+import { useState, useEffect } from "react"
+import { StyleSheet, Text, View, ScrollView } from "react-native"
+import Footer from "../components/Footer"
+import { LinearGradient } from "expo-linear-gradient"
+import { buscarLimite } from "../service/LimiteService"
+import { buscarDespesas } from "../service/DespesaService"
+import { mostrarToast } from "../components/Toast"
+import StatusCards from "../components/StatusCards"
+import DateSelect from "../components/DateSelect"
 
 export default function Home({ navigation }) {
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-    const [modalVisible, setModalVisible] = useState(false);
-    const [monthlyLimit, setMonthlyLimit] = useState(0);
-    const [monthlyExpenses, setMonthlyExpenses] = useState(0);
-    
-    const months = [
-        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-    ];
+    const anoAtual = new Date().getFullYear()
+    const mesAtual = new Date().getMonth() + 1
 
-    const progressPercentage = monthlyLimit > 0 ? (monthlyExpenses / monthlyLimit) : 0;
-    const isWithinLimit = monthlyExpenses <= monthlyLimit;
-
-    const getFeedbackData = () => {
-        if (isWithinLimit) {
-            return {
-                emoji: "🎉",
-                message: "Parabéns! Você está dentro do seu limite mensal. Continue assim!",
-                color: "#4CAF50"
-            };
-        } else {
-            return {
-                emoji: "⚠️",
-                message: "Atenção! Você ultrapassou seu limite mensal. Revise seus gastos.",
-                color: "#F44336"
-            };
-        }
-    };
-
-    const feedbackData = getFeedbackData();
+    const [anoSelecionado, setAnoSelecionado] = useState(anoAtual.toString())
+    const [mesSelecionado, setMesSelecionado] = useState(mesAtual.toString())
+    const [monthlyLimit, setMonthlyLimit] = useState(0)
+    const [monthlyExpenses, setMonthlyExpenses] = useState(0)
+    const [isLoading, setIsLoading] = useState(false)
 
     const carregarDadosDoMes = async () => {
+        if (!anoSelecionado || !mesSelecionado) return
+    
+        setIsLoading(true)
+    
+        const ano = Number.parseInt(anoSelecionado)
+        const mes = Number.parseInt(mesSelecionado)
+    
         try {
-            const anoAtual = new Date().getFullYear();
-            const mesSelecionado = selectedMonth + 1; // Convertendo de 0-11 para 1-12
-
-            // Buscar limite do mês
-            const limite = await buscarLimite(mesSelecionado, anoAtual);
-            setMonthlyLimit(limite?.valor || 0);
-
-            // Buscar despesas do mês
-            const despesas = await buscarDespesas(mesSelecionado, anoAtual);
-            const totalDespesas = despesas.reduce((total, despesa) => total + parseFloat(despesa.valor), 0);
-            setMonthlyExpenses(totalDespesas);
-
+            const limite = await buscarLimite(mes, ano)
+            setMonthlyLimit(limite?.valor || 0)
         } catch (error) {
-            mostrarToast("error", "Erro", error.message || "Falha ao carregar dados do mês.");
+            setMonthlyLimit(0)
         }
-    };
+
+        try {
+            const despesas = await buscarDespesas(mes, ano)
+    
+            const totalDespesas = despesas.reduce(
+                (total, despesa) => total + Number.parseFloat(despesa.valor),
+                0
+            )
+            setMonthlyExpenses(totalDespesas)
+        } catch (error) {
+            mostrarToast("error", "Erro", "Não foi possível carregar as despesas do período.")
+            setMonthlyExpenses(0)
+        }
+    
+        setIsLoading(false)
+    }
+    
 
     useEffect(() => {
-        carregarDadosDoMes();
-    }, [selectedMonth]);
+        carregarDadosDoMes()
+    }, [anoSelecionado, mesSelecionado])
+
+    const handleAnoChange = (novoAno) => {
+        setAnoSelecionado(novoAno)
+    }
+
+    const handleMesChange = (novoMes) => {
+        setMesSelecionado(novoMes)
+    }
+
+    const getPeriodoTexto = () => {
+        if (!mesSelecionado || !anoSelecionado) return "Período não selecionado"
+
+        const mesNome = new Date(0, Number.parseInt(mesSelecionado) - 1).toLocaleString("pt-BR", { month: "long" })
+        const mesCapitalizado = mesNome.charAt(0).toUpperCase() + mesNome.slice(1)
+        return `${mesCapitalizado} de ${anoSelecionado}`
+    }
+
+    const isCurrentPeriod = () => {
+        return Number.parseInt(anoSelecionado) === anoAtual && Number.parseInt(mesSelecionado) === mesAtual
+    }
 
     return (
         <LinearGradient
-            colors={['#F2C4B3', '#FFA07A']}
+            colors={["#F2C4B3", "#FFA07A"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={styles.container}
         >
             <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 <View style={styles.headerContainer}>
-                    <Text style={styles.welcomeTitle}>Bem-vindo! 👋</Text>
+                    <Text style={styles.welcomeTitle}>{isCurrentPeriod() ? "Bem-vindo! 👋" : "Consulta Histórica 📊"}</Text>
                     <Text style={styles.welcomeDescription}>
-                        Gerencie suas despesas de forma inteligente e mantenha suas finanças em dia.
+                        {isCurrentPeriod()
+                            ? "Gerencie suas despesas de forma inteligente e mantenha suas finanças em dia."
+                            : "Visualize seus dados financeiros de períodos anteriores ou futuros."}
                     </Text>
                 </View>
 
-                <View style={styles.monthSelectorContainer}>
-                    <Text style={styles.sectionTitle}>Selecione o mês:</Text>
-                    <View style={styles.pickerContainer}>
-                        <Picker
-                            selectedValue={selectedMonth}
-                            onValueChange={(itemValue) => setSelectedMonth(itemValue)}
-                            style={styles.picker}
-                            dropdownIconColor="#010440"
-                        >
-                            {months.map((month, index) => (
-                                <Picker.Item key={index} label={month} value={index} />
-                            ))}
-                        </Picker>
+                <View style={styles.dateSelectContainer}>
+                    <Text style={styles.sectionTitle}>Selecione o período:</Text>
+                    <View style={styles.dateSelectWrapper}>
+                        <DateSelect
+                            modo="busca"
+                            anoSelecionado={anoSelecionado}
+                            mesSelecionado={mesSelecionado}
+                            onAnoChange={handleAnoChange}
+                            onMesChange={handleMesChange}
+                        />
                     </View>
                 </View>
 
-                <TouchableOpacity 
-                    style={styles.feedbackButton}
-                    onPress={() => setModalVisible(true)}
-                >
-                    <Text style={styles.feedbackButtonText}>Ver Progresso do Mês</Text>
-                </TouchableOpacity>
-
-                <View style={styles.progressContainer}>
-                    <Text style={styles.sectionTitle}>Progresso dos Gastos</Text>
-                    <View style={styles.progressInfo}>
-                        <Text style={styles.progressText}>
-                            R$ {monthlyExpenses.toFixed(2)} / R$ {monthlyLimit.toFixed(2)}
-                        </Text>
-                        <Text style={styles.progressPercentage}>
-                            {(progressPercentage * 100).toFixed(1)}%
-                        </Text>
-                    </View>
-                    <ProgressBar 
-                        progress={Math.min(progressPercentage, 1)}
-                        color={isWithinLimit ? "#4CAF50" : "#F44336"}
-                        style={styles.progressBar}
-                    />
-                    <Text style={styles.remainingText}>
-                        {isWithinLimit 
-                            ? `Restam R$ ${(monthlyLimit - monthlyExpenses).toFixed(2)}`
-                            : `Excedeu em R$ ${(monthlyExpenses - monthlyLimit).toFixed(2)}`
-                        }
-                    </Text>
+                <View style={styles.periodInfoContainer}>
+                    <Text style={styles.periodText}>📅 {getPeriodoTexto()}</Text>
+                    {isLoading && <Text style={styles.loadingText}>Carregando dados...</Text>}
                 </View>
+
+                <StatusCards limite={monthlyLimit} totalGasto={monthlyExpenses} />
+
+                {(monthlyLimit > 0 || monthlyExpenses > 0) && (
+                    <View style={styles.summaryContainer}>
+                        <Text style={styles.sectionTitle}>Resumo Financeiro</Text>
+                        <View style={styles.summaryCard}>
+                            <View style={styles.summaryRow}>
+                                <View style={styles.summaryItem}>
+                                    <Text style={styles.summaryLabel}>Limite Definido</Text>
+                                    <Text style={[styles.summaryValue, styles.limitValue]}>R$ {monthlyLimit.toFixed(2)}</Text>
+                                </View>
+                                <View style={styles.summaryItem}>
+                                    <Text style={styles.summaryLabel}>Total Gasto</Text>
+                                    <Text
+                                        style={[
+                                            styles.summaryValue,
+                                            monthlyExpenses > monthlyLimit ? styles.expenseOverValue : styles.expenseValue,
+                                        ]}
+                                    >
+                                        R$ {monthlyExpenses.toFixed(2)}
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                )}
+
+                <View style={styles.spacer} />
             </ScrollView>
-
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContainer}>
-                        <Text style={styles.modalEmoji}>{feedbackData.emoji}</Text>
-                        <Text style={styles.modalTitle}>Status do Mês</Text>
-                        <Text style={styles.modalMessage}>{feedbackData.message}</Text>
-                        <TouchableOpacity
-                            style={[styles.modalButton, { backgroundColor: feedbackData.color }]}
-                            onPress={() => setModalVisible(false)}
-                        >
-                            <Text style={styles.modalButtonText}>Entendi</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
 
             <Footer navigation={navigation} currentScreen="home" />
         </LinearGradient>
-    );
+    )
 }
 
 const styles = StyleSheet.create({
@@ -167,139 +155,119 @@ const styles = StyleSheet.create({
         paddingTop: 60,
     },
     headerContainer: {
-        alignItems: 'center',
+        alignItems: "center",
         paddingHorizontal: 20,
         marginBottom: 30,
     },
     welcomeTitle: {
         fontSize: 32,
-        fontWeight: 'bold',
+        fontWeight: "bold",
         color: "#010440",
         marginBottom: 10,
-        textAlign: 'center',
+        textAlign: "center",
     },
     welcomeDescription: {
         fontSize: 16,
         color: "#010440",
-        textAlign: 'center',
+        textAlign: "center",
         lineHeight: 22,
         paddingHorizontal: 10,
     },
-    monthSelectorContainer: {
+    dateSelectContainer: {
         paddingHorizontal: 20,
-        marginBottom: 25,
+        marginBottom: 20,
     },
     sectionTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
+        fontWeight: "bold",
         color: "#010440",
-        marginBottom: 10,
+        marginBottom: 15,
     },
-    pickerContainer: {
-        backgroundColor: "#f2DCF1",
-        borderWidth: 2,
-        borderColor: "#1B0273",
-        borderRadius: 5,
-        overflow: 'hidden',
-    },
-    picker: {
-        height: 50,
-        color: "#010440",
-    },
-    feedbackButton: {
-        backgroundColor: "#5288F2",
-        borderWidth: 2,
-        borderColor: "#1B0273",
-        borderRadius: 5,
-        paddingVertical: 15,
-        marginHorizontal: 20,
-        marginBottom: 25,
-        alignItems: 'center',
-    },
-    feedbackButtonText: {
-        color: "#F2F2F2",
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    progressContainer: {
-        paddingHorizontal: 20,
-        marginBottom: 100, // Espaço para o footer
-    },
-    progressInfo: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    progressText: {
-        fontSize: 16,
-        color: "#010440",
-        fontWeight: '600',
-    },
-    progressPercentage: {
-        fontSize: 16,
-        color: "#010440",
-        fontWeight: 'bold',
-    },
-    progressBar: {
-        height: 10,
-        borderRadius: 5,
-        backgroundColor: "#f2DCF1",
-        marginBottom: 10,
-    },
-    remainingText: {
-        fontSize: 14,
-        color: "#010440",
-        textAlign: 'center',
-        fontWeight: '500',
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContainer: {
-        backgroundColor: 'white',
-        borderRadius: 20,
-        padding: 30,
-        alignItems: 'center',
-        marginHorizontal: 20,
-        elevation: 5,
-        shadowColor: '#000',
+    dateSelectWrapper: {
+        backgroundColor: "rgba(255, 255, 255, 0.9)",
+        borderRadius: 12,
+        padding: 16,
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
+        shadowOpacity: 0.1,
         shadowRadius: 4,
+        elevation: 3,
     },
-    modalEmoji: {
-        fontSize: 60,
-        marginBottom: 15,
+    periodInfoContainer: {
+        alignItems: "center",
+        paddingHorizontal: 20,
+        marginBottom: 20,
     },
-    modalTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: "#010440",
-        marginBottom: 15,
-        textAlign: 'center',
-    },
-    modalMessage: {
+    periodText: {
         fontSize: 16,
+        fontWeight: "600",
         color: "#010440",
-        textAlign: 'center',
-        lineHeight: 22,
-        marginBottom: 25,
-        paddingHorizontal: 10,
+        backgroundColor: "rgba(255, 255, 255, 0.8)",
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        overflow: "hidden",
     },
-    modalButton: {
-        paddingVertical: 12,
-        paddingHorizontal: 30,
-        borderRadius: 5,
-        minWidth: 120,
-        alignItems: 'center',
+    loadingText: {
+        fontSize: 14,
+        color: "#666666",
+        fontStyle: "italic",
+        marginTop: 8,
     },
-    modalButtonText: {
-        color: 'white',
+    summaryContainer: {
+        paddingHorizontal: 20,
+        marginBottom: 20,
+    },
+    summaryCard: {
+        backgroundColor: "rgba(255, 255, 255, 0.95)",
+        borderRadius: 16,
+        padding: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 6,
+    },
+    summaryRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginBottom: 16,
+    },
+    summaryItem: {
+        flex: 1,
+        alignItems: "center",
+        paddingHorizontal: 8,
+    },
+    summaryLabel: {
+        fontSize: 12,
+        color: "#666666",
+        fontWeight: "600",
+        textTransform: "uppercase",
+        letterSpacing: 0.5,
+        marginBottom: 4,
+        textAlign: "center",
+    },
+    summaryValue: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: "700",
+        textAlign: "center",
     },
-});
+    limitValue: {
+        color: "#6366F1",
+    },
+    expenseValue: {
+        color: "#10B981",
+    },
+    expenseOverValue: {
+        color: "#EF4444",
+    },
+    availableValue: {
+        color: "#10B981",
+    },
+    exceedValue: {
+        color: "#EF4444",
+    },
+    spacer: {
+        height: 100,
+    },
+})

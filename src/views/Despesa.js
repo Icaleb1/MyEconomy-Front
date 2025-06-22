@@ -1,87 +1,130 @@
-"use client"
+import React, { useState, useEffect, useMemo } from "react";
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, Alert } from "react-native";
+import Footer from "../components/Footer";
+import { criarDespesa, buscarDespesas, excluirDespesa } from "../service/DespesaService";
+import { DespesaDTO } from "../model/DTOs/DespesaDto";
+import { mostrarToast } from "../components/Toast";
+import Input from "../components/Input";
+import InputSelect from "../components/InputSelect";
+import { LinearGradient } from "expo-linear-gradient";
+import DespesaModal from "../components/DespesaModal";
 
-import { useState } from "react"
-import { StyleSheet, Text, View, TouchableOpacity, FlatList, Alert } from "react-native"
-import Footer from "../components/Footer"
-import { criarDespesa, buscarDespesas, excluirDespesa } from "../service/DespesaService"
-import { DespesaDTO } from "../model/DTOs/DespesaDto"
-import { mostrarToast } from "../components/Toast"
-import Input from "../components/Input"
-import InputSelect from "../components/InputSelect"
-import { LinearGradient } from "expo-linear-gradient"
-import DespesaModal from "../components/DespesaModal"
+function DateSelect({ modo, anoSelecionado, mesSelecionado, onAnoChange, onMesChange }) {
+  const anoAtual = new Date().getFullYear();
+  const mesAtual = new Date().getMonth() + 1;
+
+  const anos = useMemo(() => Array.from({ length: 30 }, (_, i) => (anoAtual + i).toString()), [anoAtual]);
+  const mesesTodos = useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
+
+  const mesesFiltrados = useMemo(() => {
+    const anoNum = parseInt(anoSelecionado);
+    return modo === "cadastro"
+      ? mesesTodos.filter((mes) => anoNum > anoAtual || mes >= mesAtual)
+      : mesesTodos;
+  }, [modo, anoSelecionado, mesAtual, anoAtual]);
+
+  const opcoesAno = useMemo(() => anos.map((ano) => ({ label: ano, value: ano })), [anos]);
+  const opcoesMes = useMemo(
+    () =>
+      mesesFiltrados.map((mes) => ({
+        label: new Date(0, mes - 1).toLocaleString("pt-BR", { month: "long" }),
+        value: mes.toString(),
+      })),
+    [mesesFiltrados]
+  );
+
+  useEffect(() => {
+    const mesValido = mesesFiltrados.includes(Number(mesSelecionado));
+    if (modo === "cadastro" && mesSelecionado && !mesValido) {
+      onMesChange("");
+    }
+  }, [anoSelecionado, mesesFiltrados]);
+
+  return (
+    <View>
+      <InputSelect
+        label={`Ano para ${modo === "cadastro" ? "Cadastro" : "Busca"}:`}
+        selectedValue={anoSelecionado}
+        onValueChange={onAnoChange}
+        options={opcoesAno}
+      />
+      <InputSelect
+        label={`Mês para ${modo === "cadastro" ? "Cadastro" : "Busca"}:`}
+        selectedValue={mesSelecionado}
+        onValueChange={onMesChange}
+        options={opcoesMes}
+      />
+    </View>
+  );
+}
 
 export default function Despesa({ navigation }) {
-  const [valor, setValor] = useState("")
-  const [descricao, setDescricao] = useState("")
-  const [mesCadastro, setMesCadastro] = useState("")
-  const [mesBusca, setMesBusca] = useState("")
-  const [despesas, setDespesas] = useState([])
-  const [modalVisible, setModalVisible] = useState(false)
-  const [despesaSelecionada, setDespesaSelecionada] = useState(null)
+  const [valor, setValor] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [mesCadastro, setMesCadastro] = useState("");
+  const [anoCadastro, setAnoCadastro] = useState(new Date().getFullYear().toString());
+  const [mesBusca, setMesBusca] = useState("");
+  const [anoBusca, setAnoBusca] = useState(new Date().getFullYear().toString());
+  const [despesas, setDespesas] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [despesaSelecionada, setDespesaSelecionada] = useState(null);
 
-  const anoAtual = new Date().getFullYear()
-  const mesAtual = new Date().getMonth() + 1
-
-  const mesesParaCadastro = Array.from({ length: 12 }, (_, i) => i + 1).filter((m) => m >= mesAtual)
-  const mesesParaBusca = Array.from({ length: 12 }, (_, i) => i + 1)
-
-  const formatMeses = (meses) =>
-    meses.map((mes) => ({
-      label: new Date(anoAtual, mes - 1).toLocaleString("pt-BR", { month: "long" }),
-      value: mes.toString(),
-    }))
+  const anoAtual = new Date().getFullYear();
+  const mesAtual = new Date().getMonth() + 1;
 
   function abrirModalEdicao(despesa) {
-    setDespesaSelecionada(despesa)
-    setModalVisible(true)
+    setDespesaSelecionada(despesa);
+    setModalVisible(true);
   }
 
   function onDespesaAtualizada(despesaAtualizada) {
-    setDespesas((prev) => prev.map((d) => (d.id === despesaAtualizada.id ? despesaAtualizada : d)))
+    setDespesas((prev) => prev.map((d) => (d.id === despesaAtualizada.id ? despesaAtualizada : d)));
   }
 
   const handleSalvar = async () => {
-    const valorNum = Number.parseFloat(valor.replace(",", "."))
-    const mesNum = Number.parseInt(mesCadastro)
+    const valorNum = Number.parseFloat(valor.replace(",", "."));
+    const mesNum = Number.parseInt(mesCadastro);
+    const anoNum = Number.parseInt(anoCadastro);
 
-    if (!descricao || isNaN(valorNum) || !mesCadastro) {
-      mostrarToast("error", "Erro", "Preencha todos os campos corretamente.")
-      return
+    if (!descricao || isNaN(valorNum) || !mesCadastro || isNaN(anoNum)) {
+      mostrarToast("error", "Erro", "Preencha todos os campos corretamente.");
+      return;
     }
 
-    const mesReferencia = `${String(mesNum).padStart(2, "0")}-01-${anoAtual}`
-    const novaDespesa = new DespesaDTO(mesReferencia, valorNum, descricao)
+    const mesReferencia = `${String(mesNum).padStart(2, "0")}-01-${anoNum}`;
+    const novaDespesa = new DespesaDTO(mesReferencia, valorNum, descricao);
 
     try {
-      await criarDespesa(novaDespesa.toJSON())
-      mostrarToast("success", "Despesa criada!", "Sua despesa foi salva com sucesso.")
-      setValor("")
-      setDescricao("")
+      await criarDespesa(novaDespesa.toJSON());
+      mostrarToast("success", "Despesa criada!", "Sua despesa foi salva com sucesso.");
+      setValor("");
+      setDescricao("");
     } catch (error) {
-      mostrarToast("error", "Erro ao criar despesa", error.message || "Tente novamente mais tarde.")
+      mostrarToast("error", "Erro ao criar despesa", error.message || "Tente novamente mais tarde.");
     }
-  }
+  };
 
   const handleBuscarDespesas = async () => {
-    const mesNum = Number.parseInt(mesBusca)
-    if (!mesBusca || isNaN(mesNum)) {
-      mostrarToast("error", "Erro", "Selecione um mês válido.")
-      return
+    const mesNum = Number.parseInt(mesBusca);
+    const anoNum = Number.parseInt(anoBusca);
+
+    if (!mesBusca || isNaN(mesNum) || isNaN(anoNum)) {
+      mostrarToast("error", "Erro", "Selecione mês e ano válidos.");
+      return;
     }
 
     try {
-      const resultado = await buscarDespesas(mesNum, anoAtual)
-      setDespesas(resultado || [])
+      const resultado = await buscarDespesas(mesNum, anoNum);
+      setDespesas(resultado || []);
       if (resultado.length === 0) {
-        mostrarToast("info", "Nenhuma despesa", "Nenhuma despesa cadastrada neste mês.")
+        mostrarToast("info", "Nenhuma despesa", "Nenhuma despesa cadastrada neste mês.");
       } else {
-        mostrarToast("success", "Despesas encontradas", `${resultado.length} despesas listadas.`)
+        mostrarToast("success", "Despesas encontradas", `${resultado.length} despesas listadas.`);
       }
     } catch (error) {
-      mostrarToast("error", "Erro ao buscar", error.message || "Falha ao buscar despesas.")
+      mostrarToast("error", "Erro ao buscar", error.message || "Falha ao buscar despesas.");
     }
-  }
+  };
 
   const handleExcluir = (idDespesa) => {
     Alert.alert("Confirmar Exclusão", "Tem certeza que deseja excluir esta despesa?", [
@@ -91,16 +134,16 @@ export default function Despesa({ navigation }) {
         style: "destructive",
         onPress: async () => {
           try {
-            await excluirDespesa(idDespesa)
-            setDespesas((prev) => prev.filter((d) => d.id !== idDespesa))
-            mostrarToast("success", "Despesa excluída", "A despesa foi removida com sucesso.")
+            await excluirDespesa(idDespesa);
+            setDespesas((prev) => prev.filter((d) => d.id !== idDespesa));
+            mostrarToast("success", "Despesa excluída", "A despesa foi removida com sucesso.");
           } catch (error) {
-            mostrarToast("error", "Erro ao excluir", error.message || "Tente novamente mais tarde.")
+            mostrarToast("error", "Erro ao excluir", error.message || "Tente novamente mais tarde.");
           }
         },
       },
-    ])
-  }
+    ]);
+  };
 
   return (
     <LinearGradient
@@ -116,8 +159,7 @@ export default function Despesa({ navigation }) {
         renderItem={({ item }) => (
           <View style={styles.resultadoContainer}>
             <Text style={styles.resultadoTexto}>
-              {item.descricao} -{" "}
-              {Number.parseFloat(item.valor).toLocaleString("pt-BR", {
+              {item.descricao} - {Number.parseFloat(item.valor).toLocaleString("pt-BR", {
                 style: "currency",
                 currency: "BRL",
               })}
@@ -148,22 +190,24 @@ export default function Despesa({ navigation }) {
 
             <Input label="Descrição:" value={descricao} onChangeText={setDescricao} placeholder="Ex: Supermercado" />
 
-            <InputSelect
-              label="Mês para Cadastro:"
-              selectedValue={mesCadastro}
-              onValueChange={setMesCadastro}
-              options={formatMeses(mesesParaCadastro)}
+            <DateSelect
+              modo="cadastro"
+              anoSelecionado={anoCadastro}
+              mesSelecionado={mesCadastro}
+              onAnoChange={setAnoCadastro}
+              onMesChange={setMesCadastro}
             />
 
             <TouchableOpacity style={styles.saveButton} onPress={handleSalvar}>
               <Text style={styles.saveButtonText}>Salvar Despesa</Text>
             </TouchableOpacity>
 
-            <InputSelect
-              label="Mês para Busca:"
-              selectedValue={mesBusca}
-              onValueChange={setMesBusca}
-              options={formatMeses(mesesParaBusca)}
+            <DateSelect
+              modo="busca"
+              anoSelecionado={anoBusca}
+              mesSelecionado={mesBusca}
+              onAnoChange={setAnoBusca}
+              onMesChange={setMesBusca}
             />
 
             <TouchableOpacity style={styles.saveButton} onPress={handleBuscarDespesas}>
@@ -183,7 +227,7 @@ export default function Despesa({ navigation }) {
 
       <Footer navigation={navigation} currentScreen="despesa" />
     </LinearGradient>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -273,4 +317,4 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 14,
   },
-})
+});

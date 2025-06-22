@@ -66,7 +66,12 @@ export default function Perfil({ navigation }) {
 
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>Data de Nascimento:</Text>
-                    <Text style={styles.value}>{profileData.dataNascimento}</Text>
+                    <Text style={styles.value}>
+                        {profileData.dataNascimento
+                            ? new Date(profileData.dataNascimento).toLocaleDateString('pt-BR')
+                            : ''}
+                    </Text>
+
                 </View>
 
 
@@ -138,6 +143,6 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         borderWidth: 2,
         borderColor: "#1B0273",
-      }
-      
+    }
+
 });

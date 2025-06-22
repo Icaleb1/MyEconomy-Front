@@ -1,101 +1,149 @@
-"use client"
+import React, { useState, useEffect, useMemo } from "react";
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import Footer from "../components/Footer";
+import { buscarLimite, criarLimite, editarLimite, excluirLimite } from "../service/LimiteService";
+import { LimiteDTO } from "../model/DTOs/LimiteDto";
+import { mostrarToast } from "../components/Toast";
+import Input from "../components/Input";
+import InputSelect from "../components/InputSelect";
+import LimiteModal from "../components/LimiteModal";
 
-import { useState } from "react"
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
-import Footer from "../components/Footer"
-import { buscarLimite, criarLimite, editarLimite, excluirLimite } from "../service/LimiteService"
-import { LimiteDTO } from "../model/DTOs/LimiteDto"
-import { mostrarToast } from "../components/Toast"
-import Input from "../components/Input"
-import InputSelect from "../components/InputSelect"
-import LimiteModal from "../components/LimiteModal"
+function DateSelect({ modo, anoSelecionado, mesSelecionado, onAnoChange, onMesChange }) {
+  const anoAtual = new Date().getFullYear();
+  const mesAtual = new Date().getMonth() + 1;
+
+  const anos = useMemo(() => Array.from({ length: 30 }, (_, i) => (anoAtual + i).toString()), [anoAtual]);
+  const mesesTodos = useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
+
+  const mesesFiltrados = useMemo(() => {
+    const anoNum = parseInt(anoSelecionado);
+    return modo === "cadastro"
+      ? mesesTodos.filter((mes) => anoNum > anoAtual || mes >= mesAtual)
+      : mesesTodos;
+  }, [modo, anoSelecionado, mesAtual, anoAtual]);
+
+  const opcoesAno = useMemo(() => anos.map((ano) => ({ label: ano, value: ano })), [anos]);
+  const opcoesMes = useMemo(
+    () =>
+      mesesFiltrados.map((mes) => ({
+        label: new Date(0, mes - 1).toLocaleString("pt-BR", { month: "long" }),
+        value: mes.toString(),
+      })),
+    [mesesFiltrados]
+  );
+
+  useEffect(() => {
+    const mesValido = mesesFiltrados.includes(Number(mesSelecionado));
+    if (modo === "cadastro" && mesSelecionado && !mesValido) {
+      onMesChange("");
+    }
+  }, [anoSelecionado, mesesFiltrados]);
+
+  return (
+    <View>
+      <InputSelect
+        label={`Ano para ${modo === "cadastro" ? "Cadastro" : "Busca"}:`}
+        selectedValue={anoSelecionado}
+        onValueChange={onAnoChange}
+        options={opcoesAno}
+      />
+      <InputSelect
+        label={`Mês para ${modo === "cadastro" ? "Cadastro" : "Busca"}:`}
+        selectedValue={mesSelecionado}
+        onValueChange={onMesChange}
+        options={opcoesMes}
+      />
+    </View>
+  );
+}
 
 export default function Limite({ navigation }) {
-  const [valor, setValor] = useState("")
-  const [mesCadastro, setMesCadastro] = useState("")
-  const [mesBusca, setMesBusca] = useState("")
-  const [limiteBuscado, setLimiteBuscado] = useState(null)
-  const [modalVisivel, setModalVisivel] = useState(false)
-  const [idLimiteAtual, setIdLimiteAtual] = useState(null)
+  const [valor, setValor] = useState("");
+  const [mesCadastro, setMesCadastro] = useState("");
+  const [mesBusca, setMesBusca] = useState("");
+  const [anoCadastro, setAnoCadastro] = useState(new Date().getFullYear().toString());
+  const [anoBusca, setAnoBusca] = useState(new Date().getFullYear().toString());
+  const [limiteBuscado, setLimiteBuscado] = useState(null);
+  const [modalVisivel, setModalVisivel] = useState(false);
+  const [idLimiteAtual, setIdLimiteAtual] = useState(null);
 
-  const mesAtual = new Date().getMonth() + 1
-  const anoAtual = new Date().getFullYear()
-
-  const mesesParaCadastro = Array.from({ length: 12 }, (_, i) => i + 1).filter((mes) => mes >= mesAtual)
-  const mesesParaBusca = Array.from({ length: 12 }, (_, i) => i + 1)
-
-  const formatMeses = (meses) =>
-    meses.map((mes) => ({
-      label: new Date(anoAtual, mes - 1).toLocaleString("pt-BR", { month: "long" }),
-      value: mes.toString(),
-    }))
+  const mesAtual = new Date().getMonth() + 1;
+  const anoAtual = new Date().getFullYear();
 
   const handleSalvar = async () => {
-    const valorNum = Number.parseFloat(valor.replace(",", "."))
-    const mesNum = Number.parseInt(mesCadastro)
+    const valorNum = Number.parseFloat(valor.replace(",", "."));
+    const mesNum = Number.parseInt(mesCadastro);
+    const anoNum = Number.parseInt(anoCadastro);
 
-    if (isNaN(valorNum) || !mesCadastro) {
-      mostrarToast("error", "Erro", "Preencha todos os campos corretamente.")
-      return
+    if (isNaN(valorNum) || !mesCadastro || isNaN(anoNum)) {
+      mostrarToast("error", "Erro", "Preencha todos os campos corretamente.");
+      return;
     }
 
-    const mesReferencia = `${String(mesNum).padStart(2, "0")}-01-${anoAtual}`
-    const limite = new LimiteDTO(mesReferencia, valorNum)
+    const mesReferencia = `${String(mesNum).padStart(2, "0")}-01-${anoNum}`;
+    const limite = new LimiteDTO(mesReferencia, valorNum);
 
     try {
-      await criarLimite(limite.toJSON())
-      mostrarToast("success", "Limite criado!", "Seu limite foi salvo com sucesso.")
-      setValor("")
+      await criarLimite(limite.toJSON());
+      mostrarToast("success", "Limite criado!", "Seu limite foi salvo com sucesso.");
+      setValor("");
     } catch (error) {
-      mostrarToast("error", "Erro ao criar limite", error.message || "Tente novamente mais tarde.")
+      mostrarToast("error", "Erro ao criar limite", error.message || "Tente novamente mais tarde.");
     }
-  }
+  };
 
   const handleBuscarLimite = async () => {
-    const mesNum = Number.parseInt(mesBusca)
+    const mesNum = Number.parseInt(mesBusca);
+    const anoNum = Number.parseInt(anoBusca);
 
-    if (!mesBusca || isNaN(mesNum)) {
-      mostrarToast("error", "Erro", "Selecione um mês válido.")
-      return
+    if (!mesBusca || isNaN(mesNum) || isNaN(anoNum)) {
+      mostrarToast("error", "Erro", "Selecione mês e ano válidos.");
+      return;
     }
 
     try {
-      const limite = await buscarLimite(mesNum, anoAtual)
+      const limite = await buscarLimite(mesNum, anoNum);
       if (limite) {
-        setLimiteBuscado(limite.valor)
-        setIdLimiteAtual(limite.id)
-        mostrarToast("success", "Limite encontrado", `R$ ${limite.valor}`)
+        setLimiteBuscado(limite.valor);
+        setIdLimiteAtual(limite.id);
+        mostrarToast("success", "Limite encontrado", `R$ ${limite.valor}`);
       } else {
-        setLimiteBuscado(null)
-        setIdLimiteAtual(null)
-        mostrarToast("info", "Sem limite", "Nenhum limite cadastrado para esse mês.")
+        setLimiteBuscado(null);
+        setIdLimiteAtual(null);
+        mostrarToast("info", "Sem limite", "Nenhum limite cadastrado para esse mês.");
       }
     } catch (error) {
-      mostrarToast("error", "Erro", error.message || "Falha ao buscar limite.")
+      mostrarToast("error", "Erro", error.message || "Falha ao buscar limite.");
     }
-  }
+  };
 
   const handleEditar = () => {
-    if (limiteBuscado && mesBusca >= mesAtual) {
-      setModalVisivel(true)
+    const anoNum = Number(anoBusca);
+    const mesNum = Number(mesBusca);
+
+    if (
+      limiteBuscado &&
+      (anoNum > anoAtual || (anoNum === anoAtual && mesNum >= mesAtual))
+    ) {
+      setModalVisivel(true);
     } else {
-      mostrarToast("error", "Edição não permitida", "Só é possível editar limites do mês atual ou posterior.")
+      mostrarToast("error", "Edição não permitida", "Só é possível editar limites do mês atual ou posterior.");
     }
-  }
+  };
 
   const salvarEdicao = async (novoValor) => {
     try {
-      const id = idLimiteAtual
-      if (!id) return
-      await editarLimite(id, novoValor)
-      mostrarToast("success", "Limite atualizado", "Novo valor salvo.")
-      setModalVisivel(false)
-      setLimiteBuscado(novoValor)
+      const id = idLimiteAtual;
+      if (!id) return;
+      await editarLimite(id, novoValor);
+      mostrarToast("success", "Limite atualizado", "Novo valor salvo.");
+      setModalVisivel(false);
+      setLimiteBuscado(novoValor);
     } catch (error) {
-      mostrarToast("error", "Erro ao editar", error.message)
+      mostrarToast("error", "Erro ao editar", error.message);
     }
-  }
+  };
 
   return (
     <LinearGradient
@@ -115,22 +163,24 @@ export default function Limite({ navigation }) {
           keyboardType="numeric"
         />
 
-        <InputSelect
-          label="Mês para Cadastro:"
-          selectedValue={mesCadastro}
-          onValueChange={setMesCadastro}
-          options={formatMeses(mesesParaCadastro)}
+        <DateSelect
+          modo="cadastro"
+          anoSelecionado={anoCadastro}
+          mesSelecionado={mesCadastro}
+          onAnoChange={setAnoCadastro}
+          onMesChange={setMesCadastro}
         />
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSalvar}>
           <Text style={styles.saveButtonText}>Salvar Limite</Text>
         </TouchableOpacity>
 
-        <InputSelect
-          label="Mês para Busca:"
-          selectedValue={mesBusca}
-          onValueChange={setMesBusca}
-          options={formatMeses(mesesParaBusca)}
+        <DateSelect
+          modo="busca"
+          anoSelecionado={anoBusca}
+          mesSelecionado={mesBusca}
+          onAnoChange={setAnoBusca}
+          onMesChange={setMesBusca}
         />
 
         <TouchableOpacity style={styles.saveButton} onPress={handleBuscarLimite}>
@@ -164,15 +214,15 @@ export default function Limite({ navigation }) {
                         style: "destructive",
                         onPress: async () => {
                           try {
-                            await excluirLimite(idLimiteAtual)
-                            setLimiteBuscado(null)
-                            mostrarToast("success", "Limite excluído", "Limite foi removido.")
+                            await excluirLimite(idLimiteAtual);
+                            setLimiteBuscado(null);
+                            mostrarToast("success", "Limite excluído", "Limite foi removido.");
                           } catch (error) {
-                            mostrarToast("error", "Erro ao excluir", error.message)
+                            mostrarToast("error", "Erro ao excluir", error.message);
                           }
                         },
                       },
-                    ])
+                    ]);
                   }}
                 >
                   <Text style={styles.botaoTexto}>Excluir</Text>
@@ -190,7 +240,7 @@ export default function Limite({ navigation }) {
         valorAtual={limiteBuscado}
       />
     </LinearGradient>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -282,4 +332,4 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 14,
   },
-})
+});
