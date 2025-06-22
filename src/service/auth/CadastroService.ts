@@ -3,7 +3,6 @@ import api from "../Api";
 
 export async function cadastrar(usuario: UsuarioDTO) {
     try {
-      console.log(usuario)
       const response = await api.post('/cadastro',  usuario );
       return response.data;
 
