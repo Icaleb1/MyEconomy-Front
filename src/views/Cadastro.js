@@ -52,7 +52,7 @@ export default function Cadastro({ navigation }) {
                 usuario.senha,
                 usuario.confirmarSenha
             );
-            await cadastrar(dto.nome, dto.email, dto.dataNascimento, dto.senha, dto.confirmarSenha);
+            await cadastrar(dto);
             mostrarToast('success', 'Sucesso', 'Cadastro realizado com sucesso!');
             setTimeout(() => navigation.navigate("login"), 1500);
 
